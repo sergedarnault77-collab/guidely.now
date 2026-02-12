@@ -1,6 +1,6 @@
 import { createContext, useContext, type ReactNode } from "react";
-import { useHabitStore } from "./store";
-import { useActivityLogger } from "./activity-tracker";
+import { useCloudHabitStore } from "./store";
+import { useCloudActivityLogger } from "./activity-tracker";
 import { useLocalHabitStore } from "./local-store";
 import { useLocalActivityLogger } from "./local-activity-logger";
 import { useCloudStatus } from "./cloud-status";
@@ -51,10 +51,10 @@ interface HabitContextValue extends HabitStore {
 
 const HabitContext = createContext<HabitContextValue | null>(null);
 
-/* ── Cloud provider: calls useHabitStore + useActivityLogger (both use Convex hooks) ── */
+/* ── Cloud provider: calls cloud-only hooks (Convex-backed) ── */
 function CloudProviderInner({ children }: { children: ReactNode }) {
-  const store = useHabitStore();
-  const activityLogger = useActivityLogger(store.isAuthenticated);
+  const store = useCloudHabitStore();
+  const activityLogger = useCloudActivityLogger(store.isAuthenticated);
   return (
     <HabitContext.Provider value={{ ...store, activityLogger }}>
       {children}
@@ -73,23 +73,37 @@ function LocalProviderInner({ children }: { children: ReactNode }) {
   );
 }
 
-/* ── Public HabitProvider: gates on cloud status to pick the right inner provider ── */
-export function HabitProvider({ children }: { children: ReactNode }) {
-  const { syncMode, isCloudEnabled } = useCloudStatus();
+function CloudModeHabitProvider({
+  children,
+  isCloudEnabled,
+}: {
+  children: ReactNode;
+  isCloudEnabled: boolean;
+}) {
   const { data: session } = useSession();
   const isAuthenticated = !!session;
 
-  // Only use the cloud provider when ALL three conditions are met:
-  // 1. syncMode is "cloud" (user opted in)
-  // 2. Convex is reachable (isCloudEnabled)
-  // 3. User is authenticated
-  const shouldUseCloud = syncMode === "cloud" && isCloudEnabled && isAuthenticated;
-
-  if (shouldUseCloud) {
-    return <CloudProviderInner>{children}</CloudProviderInner>;
+  if (!isCloudEnabled || !isAuthenticated) {
+    return <LocalProviderInner>{children}</LocalProviderInner>;
   }
 
-  return <LocalProviderInner>{children}</LocalProviderInner>;
+  return <CloudProviderInner>{children}</CloudProviderInner>;
+}
+
+/* ── Public HabitProvider: gates on cloud status to pick the right inner provider ── */
+export function HabitProvider({ children }: { children: ReactNode }) {
+  const convexUrl = import.meta.env.VITE_CONVEX_URL;
+  const { syncMode, isCloudEnabled } = useCloudStatus();
+
+  if (!convexUrl || syncMode !== "cloud") {
+    return <LocalProviderInner>{children}</LocalProviderInner>;
+  }
+
+  return (
+    <CloudModeHabitProvider isCloudEnabled={isCloudEnabled}>
+      {children}
+    </CloudModeHabitProvider>
+  );
 }
 
 export function useHabits(): HabitContextValue {

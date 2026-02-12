@@ -146,7 +146,11 @@ function generateSampleWeeklyData(): WeeklyStore {
   return store;
 }
 
-export function useHabitStore() {
+/**
+ * Cloud-backed habit store.
+ * Must only be rendered when Convex URL is present and syncMode is "cloud".
+ */
+export function useCloudHabitStore() {
   // ===== Session & Cloud Status =====
   const { data: session } = useSession();
   const { syncMode, isCloudEnabled } = useCloudStatus();

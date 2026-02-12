@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useConvex } from "convex/react";
 import { api } from "../../convex/_generated/api";
+import { useCloudStatus } from "@/lib/cloud-status";
 
 type SyncChoice = "upload" | "keep-cloud";
 
@@ -74,7 +75,17 @@ function getLocalPayload() {
   return { months, weeks, selectedYear };
 }
 
-export function SyncModal({ open, onClose, onSyncComplete }: SyncModalProps) {
+export function SyncModal(props: SyncModalProps) {
+  const convexUrl = import.meta.env.VITE_CONVEX_URL;
+  const { syncMode } = useCloudStatus();
+
+  if (!props.open) return null;
+  if (!convexUrl || syncMode !== "cloud") return null;
+
+  return <CloudSyncModal {...props} />;
+}
+
+function CloudSyncModal({ open, onClose, onSyncComplete }: SyncModalProps) {
   const [syncing, setSyncing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [choice, setChoice] = useState<SyncChoice>("upload");

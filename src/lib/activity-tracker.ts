@@ -16,7 +16,7 @@ export interface ActivityEvent {
 
 // ---- Cloud-backed Activity Logger ----
 
-export function useActivityLogger(isAuthenticated: boolean) {
+export function useCloudActivityLogger(isAuthenticated: boolean) {
   const logEvent = useMutation(api.mutations.logActivityEvent);
   const queueRef = useRef<ActivityEvent[]>([]);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -203,40 +203,63 @@ export function getLocalEvents(limit: number = 50): ActivityEvent[] {
   }
 }
 
-// ---- Unified Activity Feed Hook ----
+// ---- Activity Feed Hooks ----
 
-export function useActivityFeed(
+type CloudActivityEvent = {
+  _id: string;
+  type: string;
+  title: string;
+  detail: string;
+  emoji: string;
+  occurredAt: number;
+};
+
+export function useCloudActivityFeed(
   isAuthenticated: boolean,
   data: YearData,
   weeklyData: WeeklyStore,
   selectedYear: number,
   limit: number = 30
 ) {
-  // Cloud events (authenticated users)
   const cloudEvents = useQuery(
     api.queries.listActivityEvents,
     isAuthenticated ? { limit } : "skip"
-  );
+  ) as CloudActivityEvent[] | undefined;
 
-  // Generate computed events from current data (works for everyone)
+  return useMergedActivityEvents(cloudEvents, data, weeklyData, selectedYear, limit);
+}
+
+export function useLocalActivityFeed(
+  data: YearData,
+  weeklyData: WeeklyStore,
+  selectedYear: number,
+  limit: number = 30
+) {
+  return useMergedActivityEvents(undefined, data, weeklyData, selectedYear, limit);
+}
+
+function useMergedActivityEvents(
+  cloudEvents: CloudActivityEvent[] | undefined,
+  data: YearData,
+  weeklyData: WeeklyStore,
+  selectedYear: number,
+  limit: number
+) {
   const computedEvents = useMemo(
     () => generateComputedEvents(data, weeklyData, selectedYear, limit),
     [data, weeklyData, selectedYear, limit]
   );
 
-  // Local stored events (guest fallback + recent actions)
   const localEvents = useMemo(() => getLocalEvents(limit), [limit]);
 
-  // Merge: cloud events take priority, then local, then computed
-  const mergedEvents = useMemo(() => {
+  return useMemo(() => {
     const seen = new Set<string>();
     const all: ActivityEvent[] = [];
 
-    // Cloud events first (most authoritative)
     if (cloudEvents && cloudEvents.length > 0) {
       for (const ce of cloudEvents) {
         const event: ActivityEvent = {
-          id: ce._id,
+          id: String(ce._id),
           type: ce.type as ActivityEvent["type"],
           title: ce.title,
           detail: ce.detail,
@@ -251,7 +274,6 @@ export function useActivityFeed(
       }
     }
 
-    // Local events (recent actions not yet in cloud)
     for (const le of localEvents) {
       const key = `${le.type}-${le.title}-${Math.floor(le.occurredAt / 60000)}`;
       if (!seen.has(key)) {
@@ -260,7 +282,6 @@ export function useActivityFeed(
       }
     }
 
-    // Computed events (derived from data state)
     for (const ce of computedEvents) {
       const key = `${ce.type}-${ce.title}`;
       if (!seen.has(key)) {
@@ -269,12 +290,9 @@ export function useActivityFeed(
       }
     }
 
-    // Sort by time descending
     all.sort((a, b) => b.occurredAt - a.occurredAt);
     return all.slice(0, limit);
   }, [cloudEvents, localEvents, computedEvents, limit]);
-
-  return mergedEvents;
 }
 
 // ---- Computed Events (derived from current data snapshot) ----

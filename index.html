@@ -1,0 +1,413 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+    
+    <!-- App Metadata -->
+    <title>Guidely</title>
+    <meta name="description" content="Your AI executive assistant — managing your schedule, priorities, and focus with smart planning, behavioral insights, and proactive recommendations." />
+    <meta name="keywords" content="AI executive assistant, smart planner, AI productivity, task management, behavioral insights, schedule optimization, focus management" />
+    <meta name="author" content="Guidely" />
+    <meta name="robots" content="index, follow" />
+    
+    <!-- iOS App Configuration -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Guidely" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    
+    <!-- Android App Configuration -->
+    <meta name="theme-color" content="#030712" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    
+    <!-- App Icons -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Guidely — Your AI Executive Assistant" />
+    <meta property="og:description" content="Your AI executive assistant — managing your schedule, priorities, and focus with smart planning and proactive recommendations." />
+    <meta property="og:url" content="https://guidely.app/" />
+    <meta property="og:site_name" content="Guidely" />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Guidely — Your AI Executive Assistant" />
+    <meta name="twitter:description" content="Your AI executive assistant — managing your schedule, priorities, and focus with smart planning and proactive recommendations." />
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Guidely",
+      "description": "Your AI executive assistant — smart scheduling, priority management, behavioral insights, and proactive focus recommendations.",
+      "url": "https://guidely.app/",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "iOS, Android, Web",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "featureList": [
+        "AI Daily Briefing with prioritized agenda",
+        "Smart Scheduling with natural language",
+        "Predictive Intelligence for task completion",
+        "Proactive Nudges and adaptive reminders",
+        "Executive Insights and behavioral analytics",
+        "AI Co-Pilot chat",
+        "Auto-Routine Builder",
+        "360° Command Center with yearly, monthly, and weekly views",
+        "Mood and Energy Tracking",
+        "Cloud Sync with Authentication"
+      ]
+    }
+    </script>
+
+    <!-- Pre-render critical CSS for the shell -->
+    <style>
+      /* Critical CSS for pre-rendered shell - removed after hydration */
+      #prerender-shell {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        min-height: 100vh;
+        background: linear-gradient(135deg, #f9fafb, #ffffff, #f3f4f6);
+        color: #111827;
+      }
+      @media (prefers-color-scheme: dark) {
+        #prerender-shell {
+          background: linear-gradient(135deg, #030712, #111827, #030712);
+          color: #f3f4f6;
+        }
+      }
+      #prerender-shell .pr-header {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        backdrop-filter: blur(16px);
+        background: rgba(255,255,255,0.7);
+        border-bottom: 1px solid rgba(229,231,235,0.5);
+        padding: 0 1.5rem;
+        padding-top: max(0.5rem, env(safe-area-inset-top));
+      }
+      @media (prefers-color-scheme: dark) {
+        #prerender-shell .pr-header {
+          background: rgba(17,24,39,0.7);
+          border-bottom-color: rgba(31,41,55,0.5);
+        }
+      }
+      #prerender-shell .pr-header-inner {
+        max-width: 80rem;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 4rem;
+      }
+      #prerender-shell .pr-logo {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
+      #prerender-shell .pr-logo-icon {
+        width: 2.25rem;
+        height: 2.25rem;
+        border-radius: 0.75rem;
+        background: linear-gradient(135deg, #10b981, #14b8a6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.125rem;
+        box-shadow: 0 4px 6px rgba(16,185,129,0.2);
+      }
+      #prerender-shell .pr-logo-text {
+        font-size: 1.125rem;
+        font-weight: 700;
+        background: linear-gradient(to right, #059669, #14b8a6);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      #prerender-shell .pr-logo-sub {
+        font-size: 0.625rem;
+        color: #9ca3af;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-top: -2px;
+      }
+      #prerender-shell .pr-nav {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+      }
+      #prerender-shell .pr-nav a {
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #6b7280;
+        text-decoration: none;
+        transition: background 0.2s;
+      }
+      #prerender-shell .pr-nav a:hover {
+        background: #f3f4f6;
+      }
+      @media (prefers-color-scheme: dark) {
+        #prerender-shell .pr-nav a { color: #9ca3af; }
+        #prerender-shell .pr-nav a:hover { background: #1f2937; }
+      }
+      #prerender-shell .pr-nav a.active {
+        background: #d1fae5;
+        color: #047857;
+      }
+      @media (prefers-color-scheme: dark) {
+        #prerender-shell .pr-nav a.active {
+          background: rgba(6,78,59,0.4);
+          color: #6ee7b7;
+        }
+      }
+      #prerender-shell .pr-main {
+        max-width: 80rem;
+        margin: 0 auto;
+        padding: 2rem 1.5rem;
+        padding-left: max(1.5rem, env(safe-area-inset-left));
+        padding-right: max(1.5rem, env(safe-area-inset-right));
+        padding-bottom: max(2rem, env(safe-area-inset-bottom));
+      }
+      #prerender-shell .pr-hero {
+        text-align: center;
+        padding: 3rem 0 2rem;
+      }
+      #prerender-shell .pr-hero h2 {
+        font-size: 2rem;
+        font-weight: 800;
+        margin-bottom: 0.75rem;
+        line-height: 1.2;
+      }
+      #prerender-shell .pr-hero p {
+        font-size: 1.125rem;
+        color: #6b7280;
+        max-width: 36rem;
+        margin: 0 auto 2rem;
+      }
+      @media (prefers-color-scheme: dark) {
+        #prerender-shell .pr-hero p { color: #9ca3af; }
+      }
+      #prerender-shell .pr-schedule-bar {
+        max-width: 40rem;
+        margin: 0 auto 2.5rem;
+        padding: 1rem 1.25rem;
+        border-radius: 1rem;
+        border: 1px solid #e5e7eb;
+        background: white;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      }
+      @media (prefers-color-scheme: dark) {
+        #prerender-shell .pr-schedule-bar {
+          background: #1f2937;
+          border-color: #374151;
+        }
+      }
+      #prerender-shell .pr-schedule-bar span {
+        color: #9ca3af;
+        font-size: 0.875rem;
+      }
+      #prerender-shell .pr-features {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin-top: 2rem;
+      }
+      #prerender-shell .pr-feature-card {
+        padding: 1.5rem;
+        border-radius: 1rem;
+        border: 1px solid #e5e7eb;
+        background: white;
+      }
+      @media (prefers-color-scheme: dark) {
+        #prerender-shell .pr-feature-card {
+          background: rgba(31,41,55,0.5);
+          border-color: #374151;
+        }
+      }
+      #prerender-shell .pr-feature-card h3 {
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+      }
+      #prerender-shell .pr-feature-card p {
+        font-size: 0.875rem;
+        color: #6b7280;
+        line-height: 1.5;
+      }
+      @media (prefers-color-scheme: dark) {
+        #prerender-shell .pr-feature-card p { color: #9ca3af; }
+      }
+      #prerender-shell .pr-stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+        margin: 2rem 0;
+      }
+      #prerender-shell .pr-stat {
+        text-align: center;
+        padding: 1.25rem;
+        border-radius: 0.75rem;
+        background: white;
+        border: 1px solid #e5e7eb;
+      }
+      @media (prefers-color-scheme: dark) {
+        #prerender-shell .pr-stat {
+          background: rgba(31,41,55,0.5);
+          border-color: #374151;
+        }
+      }
+      #prerender-shell .pr-stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #10b981;
+      }
+      #prerender-shell .pr-stat-label {
+        font-size: 0.75rem;
+        color: #9ca3af;
+        margin-top: 0.25rem;
+      }
+      #prerender-shell .pr-footer {
+        border-top: 1px solid rgba(229,231,235,0.5);
+        margin-top: 3rem;
+        padding: 1.5rem;
+        padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
+        text-align: center;
+      }
+      @media (prefers-color-scheme: dark) {
+        #prerender-shell .pr-footer { border-top-color: rgba(31,41,55,0.5); }
+      }
+      #prerender-shell .pr-footer p {
+        font-size: 0.875rem;
+        color: #9ca3af;
+      }
+      @media (max-width: 768px) {
+        #prerender-shell .pr-stats { grid-template-columns: repeat(2, 1fr); }
+        #prerender-shell .pr-nav { display: none; }
+      }
+    </style>
+
+    <script src="https://shipper-api-production-3b99.up.railway.app/tracker.js" data-project-id="92152608-dbfa-4b77-8901-b6f3047ccb22" async></script>
+    <script type="module" src="/.shipper/monitor.js"></script>
+  </head>
+  <body>
+    <div id="root">
+      <!-- Pre-rendered shell: visible to bots/crawlers, replaced after React hydration -->
+      <div id="prerender-shell">
+        <!-- Header -->
+        <header class="pr-header">
+          <div class="pr-header-inner">
+            <div class="pr-logo">
+              <div class="pr-logo-icon">✦</div>
+              <div>
+                <div class="pr-logo-text">Guidely</div>
+                <div class="pr-logo-sub">AI Executive Assistant</div>
+              </div>
+            </div>
+            <nav class="pr-nav">
+              <a href="/" class="active">📊 Dashboard</a>
+              <a href="/weekly">📋 Weekly</a>
+              <a href="/tracker">✅ Monthly</a>
+              <a href="/analytics">📈 Analytics</a>
+              <a href="/signin">Sign In</a>
+            </nav>
+          </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="pr-main">
+          <!-- Hero Section -->
+          <section class="pr-hero">
+            <h2>Your AI Executive Assistant</h2>
+            <p>Manage your schedule, priorities, and focus with an AI assistant that learns your patterns and keeps you on track.</p>
+          </section>
+
+          <!-- Smart Schedule Bar -->
+          <div class="pr-schedule-bar">
+            <span>🧠</span>
+            <span>What would you like to add? Try: "Call garage for a check on Tuesday at 1pm"</span>
+          </div>
+
+          <!-- Stats Overview -->
+          <section class="pr-stats">
+            <div class="pr-stat">
+              <div class="pr-stat-value">0%</div>
+              <div class="pr-stat-label">Year Progress</div>
+            </div>
+            <div class="pr-stat">
+              <div class="pr-stat-value">0</div>
+              <div class="pr-stat-label">Active Habits</div>
+            </div>
+            <div class="pr-stat">
+              <div class="pr-stat-value">0</div>
+              <div class="pr-stat-label">Day Streak</div>
+            </div>
+            <div class="pr-stat">
+              <div class="pr-stat-value">—</div>
+              <div class="pr-stat-label">Best Month</div>
+            </div>
+          </section>
+
+          <!-- Feature Cards -->
+          <section class="pr-features">
+            <article class="pr-feature-card">
+              <h3>🧠 AI Daily Briefing</h3>
+              <p>Every morning, your assistant prepares a prioritized agenda based on deadlines, urgency, and your energy patterns. It learns what works best for you.</p>
+            </article>
+            <article class="pr-feature-card">
+              <h3>⚡ Smart Scheduling</h3>
+              <p>Tell your assistant naturally — "Call dentist Thursday at 2pm" — and it infers category, duration, priority, and schedules it for you.</p>
+            </article>
+            <article class="pr-feature-card">
+              <h3>📊 Predictive Intelligence</h3>
+              <p>Your assistant predicts task completion likelihood based on historical patterns, time of day, and current momentum — so you focus on what matters.</p>
+            </article>
+            <article class="pr-feature-card">
+              <h3>🔔 Proactive Nudges</h3>
+              <p>Your assistant knows when to nudge you based on past success patterns. Gentle reminders when you need them, encouragement when you're on a roll.</p>
+            </article>
+            <article class="pr-feature-card">
+              <h3>📈 Executive Insights</h3>
+              <p>Your assistant surfaces your best focus times, procrastination triggers, and burnout signals — turning data into actionable decisions.</p>
+            </article>
+            <article class="pr-feature-card">
+              <h3>💬 AI Co-Pilot</h3>
+              <p>Ask your assistant "Why do I keep delaying admin tasks?" or "How should I plan tomorrow?" and get personalized guidance based on your data.</p>
+            </article>
+            <article class="pr-feature-card">
+              <h3>🔄 Auto-Routine Builder</h3>
+              <p>Your assistant detects recurring patterns and suggests optimized routines — weekly reviews, planning blocks, and focus sessions tailored to you.</p>
+            </article>
+            <article class="pr-feature-card">
+              <h3>📅 360° Command Center</h3>
+              <p>View your life from every angle — yearly heatmaps, monthly grids, and weekly planners with mood and energy overlays. Your assistant keeps it all in sync.</p>
+            </article>
+          </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="pr-footer">
+          <p>Your AI-powered executive assistant ✦</p>
+          <p style="font-size:0.75rem;color:#6b7280;margin-top:0.5rem;">Guidely &copy; 2025</p>
+        </footer>
+      </div>
+    </div>
+    <script type="module" src="/src/main.tsx"></script>
+    <noscript>
+      <style>#prerender-shell { display: block !important; }</style>
+      <p style="text-align:center;padding:2rem;color:#6b7280;">Guidely requires JavaScript to be enabled for full functionality. The content above shows the app features.</p>
+    </noscript>
+  </body>
+</html>

@@ -1,0 +1,54 @@
+{
+  "name": "Guidely",
+  "displayName": "Guidely",
+  "version": "1.0.0",
+  "description": "Your AI executive assistant — managing your schedule, priorities, and focus with smart planning, behavioral insights, and proactive recommendations.",
+  "author": "Guidely",
+  "license": "MIT",
+  "bundleIdentifier": "com.guidely.app",
+  "androidPackageName": "com.guidely.app",
+  "platforms": ["ios", "android"],
+  "ios": {
+    "bundleIdentifier": "com.guidely.app",
+    "buildNumber": "1",
+    "supportsTablet": true,
+    "orientations": ["portrait", "portraitUpsideDown", "landscape", "landscapeLeft", "landscapeRight"],
+    "requiresFullScreen": false,
+    "infoPlist": {
+      "NSLocalNetworkUsageDescription": "Allow Guidely to access your local network for cloud sync",
+      "NSBonjourServices": ["_http._tcp"],
+      "NSMicrophoneUsageDescription": "Guidely uses your microphone for voice input (optional)",
+      "NSPhotoLibraryUsageDescription": "Guidely can access your photos for task attachments (optional)",
+      "UIRequiredDeviceCapabilities": ["armv7"],
+      "UIPreferredInterfaceIdiomMask": 3,
+      "UIStatusBarStyle": "UIStatusBarStyleDarkContent",
+      "UIViewControllerBasedStatusBarAppearance": false
+    }
+  },
+  "android": {
+    "package": "com.guidely.app",
+    "versionCode": 1,
+    "permissions": [
+      "android.permission.INTERNET",
+      "android.permission.ACCESS_NETWORK_STATE",
+      "android.permission.POST_NOTIFICATIONS",
+      "android.permission.READ_EXTERNAL_STORAGE",
+      "android.permission.WRITE_EXTERNAL_STORAGE"
+    ],
+    "features": [
+      {
+        "name": "android.hardware.touchscreen",
+        "required": false
+      }
+    ],
+    "minSdkVersion": 24,
+    "targetSdkVersion": 34,
+    "compileSdkVersion": 34
+  },
+  "plugins": {
+    "capacitor": {
+      "version": "6.0.0"
+    }
+  },
+  "icons": []
+}

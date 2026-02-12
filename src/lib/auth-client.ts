@@ -8,13 +8,18 @@ import {
   crossDomainClient,
 } from "@convex-dev/better-auth/client/plugins";
 
+const convexSiteUrl = import.meta.env.VITE_CONVEX_SITE_URL?.trim();
+const fallbackBaseUrl =
+  typeof window !== "undefined" ? window.location.origin : "";
+export const isCloudAuthConfigured = Boolean(convexSiteUrl);
+
 /**
  * Better Auth client instance
  * Use this for all authentication operations
  */
 export const authClient = createAuthClient({
-  baseURL: import.meta.env.VITE_CONVEX_SITE_URL,
-  plugins: [convexClient(), crossDomainClient()],
+  baseURL: convexSiteUrl || fallbackBaseUrl,
+  plugins: isCloudAuthConfigured ? [convexClient(), crossDomainClient()] : [],
 });
 
 // Re-export hooks for convenience

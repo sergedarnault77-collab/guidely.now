@@ -42,7 +42,10 @@ function ThemeToggle() {
 
 function CloudSyncBanner() {
   const [dismissed, setDismissed] = useState(false)
-  const { convexUrlPresent, convexReachable, checking } = useCloudStatus()
+  const { syncMode, convexUrlPresent, convexReachable, checking } = useCloudStatus()
+
+  // Banner is only relevant when user explicitly enabled cloud mode.
+  if (syncMode !== "cloud") return null
 
   // Don't show while still checking, or if everything is fine
   if (checking || (convexUrlPresent && convexReachable) || dismissed) return null

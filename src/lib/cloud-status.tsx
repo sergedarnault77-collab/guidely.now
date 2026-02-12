@@ -26,6 +26,9 @@ const CloudStatusContext = createContext<CloudStatus>({
   isCloudEnabled: false,
 });
 
+const convexUrl = (import.meta as { env?: { VITE_CONVEX_URL?: string } }).env?.VITE_CONVEX_URL?.trim();
+const convexUrlConfigured = Boolean(convexUrl);
+
 function loadSyncMode(): SyncMode {
   try {
     const stored = localStorage.getItem(SYNC_MODE_KEY);
@@ -41,9 +44,9 @@ function saveSyncMode(mode: SyncMode) {
 }
 
 export function CloudStatusProvider({ children }: { children: ReactNode }) {
-  const [convexUrlPresent, setConvexUrlPresent] = useState(false);
+  const [convexUrlPresent, setConvexUrlPresent] = useState(convexUrlConfigured);
   const [convexReachable, setConvexReachable] = useState(false);
-  const [checking, setChecking] = useState(true);
+  const [checking, setChecking] = useState(false);
   const [lastCheckedAt, setLastCheckedAt] = useState<Date | null>(null);
   const [syncMode, setSyncModeState] = useState<SyncMode>(loadSyncMode);
 
@@ -53,21 +56,20 @@ export function CloudStatusProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const check = useCallback(async () => {
+    setConvexUrlPresent(convexUrlConfigured);
+
+    // In local mode (or with no URL), do not touch Convex at all.
+    if (!convexUrlConfigured || syncMode !== "cloud") {
+      setChecking(false);
+      setConvexReachable(false);
+      setLastCheckedAt(new Date());
+      return;
+    }
+
     setChecking(true);
     try {
-      const convexUrl = (import.meta as any).env?.VITE_CONVEX_URL;
-      if (!convexUrl) {
-        setConvexUrlPresent(false);
-        setConvexReachable(false);
-        setChecking(false);
-        setLastCheckedAt(new Date());
-        return;
-      }
-
-      setConvexUrlPresent(true);
-
       // Ping the Convex version endpoint with a 4s timeout
-      const pingUrl = convexUrl.replace(
+      const pingUrl = convexUrl!.replace(
         /\.cloud\.convex\.cloud$/,
         ".convex.cloud/version"
       );
@@ -82,7 +84,7 @@ export function CloudStatusProvider({ children }: { children: ReactNode }) {
       setChecking(false);
       setLastCheckedAt(new Date());
     }
-  }, []);
+  }, [syncMode]);
 
   useEffect(() => {
     check();

@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import { RouterProvider, createRouter } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
 import { ConvexProvider, ConvexReactClient } from "convex/react";
+import "./index.css";
 
 import { SubscriptionProvider } from "@/lib/subscription";
 import { CloudStatusProvider } from "@/lib/cloud-status";

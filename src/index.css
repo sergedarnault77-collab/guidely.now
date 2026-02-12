@@ -1,1 +1,2 @@
-/* minimal CSS for fragment restore */
+@import "tailwindcss";
+@import "./styles/tailwind-theme.css";

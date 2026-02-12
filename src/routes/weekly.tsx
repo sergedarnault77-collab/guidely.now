@@ -65,8 +65,8 @@ function WeeklyPlannerContent() {
 
   const overallTaskProgress = calculateWeeklyOverallProgress(weekData.tasks);
   const habitProgress = calculateWeeklyHabitProgress(weekData.habitCompletions);
-  const overallTaskProgressPercent = Math.round(overallTaskProgress * 100) / 100;
-  const habitProgressPercent = Math.round(habitProgress * 100) / 100;
+  const overallTaskProgressPercent = Math.round(overallTaskProgress.percentage * 100) / 100;
+  const habitProgressPercent = Math.round(habitProgress.percentage * 100) / 100;
 
   const dailyBarData = WEEKDAY_SHORT.map((label, i) => {
     const p = calculateWeeklyTaskProgress(weekData.tasks, i);
@@ -327,7 +327,7 @@ function WeeklyPlannerContent() {
                       </div>
                       <div className="flex gap-1">
                         {WEEKDAY_SHORT.map((_, dayIndex) => {
-                          const isCompleted = weekData.habitCompletions[habit.id]?.includes(dayIndex) || false;
+                          const isCompleted = (weekData.habitCompletions[habit.id] || [])[dayIndex] || false;
                           return (
                             <button
                               key={dayIndex}
@@ -363,10 +363,10 @@ function WeeklyPlannerContent() {
         <div className="bg-white dark:bg-gray-800/50 rounded-2xl p-5 border border-gray-200/60 dark:border-gray-700/40">
           <h3 className="font-semibold mb-4">Weekly Notes</h3>
           <textarea
-            value={weekData.notes}
+            value={typeof weekData.notes === 'string' ? weekData.notes : ''}
             onChange={(e) =>
               guard(() => {
-                updateWeeklyNotes(weekKey, e.target.value);
+                updateWeeklyNotes(weekKey, { general: e.target.value, improvements: '', gratitude: '' });
               })
             }
             placeholder="Reflect on your week, set intentions, or note anything important..."
@@ -376,8 +376,8 @@ function WeeklyPlannerContent() {
       )}
 
       {/* AI Banner */}
-      <UpgradeGate feature="ai_weekly_planner">
-        <AIWeeklyBanner weekData={weekData} />
+      <UpgradeGate feature="aiWeeklyPlanning">
+        <AIWeeklyBanner weekData={weekData} weekKey={weekKey} onMoveTask={moveWeeklyTask} onRemoveTask={removeWeeklyTask} />
       </UpgradeGate>
 
       {/* Weekly Chart */}

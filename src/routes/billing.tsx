@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
 import { usePlan, LockedFeature } from '@/lib/subscription'
-import { restorePurchases } from '@/lib/mobile-app'
+// import { restorePurchases } from '@/lib/mobile-app'
 import { simulateDeepLink } from '@/lib/deep-link-test'
 import { toast } from 'sonner'
 
@@ -21,14 +21,7 @@ function BillingPage() {
   const handleRestorePurchases = async () => {
     setIsRestoringPurchases(true)
     try {
-      const success = await restorePurchases()
-      if (success) {
-        toast.success('Purchases restored')
-      } else {
-        toast.info('No purchases to restore')
-      }
-    } catch (error) {
-      toast.error('Failed to restore purchases')
+      toast.info('Restore purchases not available in web mode')
     } finally {
       setIsRestoringPurchases(false)
     }

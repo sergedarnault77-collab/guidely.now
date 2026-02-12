@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useHabits } from "../lib/context";
+import { useCloudStatus } from "../lib/cloud-status";
 import { MONTHS, getDaysInMonth, getFirstDayOfMonth, calculateDailyProgress, calculateMonthProgress, getHabitStats } from "../lib/types";
 import { ProgressRing } from "../components/ProgressRing";
 import { AreaChart } from "../components/AreaChart";
@@ -7,7 +8,7 @@ import { BarChart } from "../components/BarChart";
 import { GuestGateModal, useGuestGate } from "../components/GuestGate";
 import { useState, useRef } from "react";
 
-function TrackerPage() {
+function TrackerContent() {
   const { month: searchMonth } = Route.useSearch();
   const now = new Date();
   const {
@@ -512,6 +513,25 @@ function TrackerPage() {
       )}
     </div>
   );
+}
+
+function TrackerPage() {
+  const { checking } = useCloudStatus();
+
+  if (checking) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 animate-pulse">
+        <div className="h-8 w-64 bg-gray-200 dark:bg-gray-700 rounded-lg mb-4" />
+        <div className="grid grid-cols-1 gap-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-64 rounded-2xl bg-gray-100 dark:bg-gray-800/50" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  return <TrackerContent />;
 }
 
 export const Route = createFileRoute("/tracker")({

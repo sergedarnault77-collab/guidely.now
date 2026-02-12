@@ -22,32 +22,20 @@ const convexClient = convexUrl ? new ConvexReactClient(convexUrl) : null;
 
 const root = document.getElementById("root")!;
 
-if (convexClient) {
-  // Cloud mode: wrap with ConvexProvider
-  ReactDOM.createRoot(root).render(
-    <React.StrictMode>
-      <ConvexProvider client={convexClient}>
-        <SubscriptionProvider>
-          <CloudStatusProvider>
-            <HabitProvider>
+ReactDOM.createRoot(root).render(
+  <React.StrictMode>
+    <SubscriptionProvider>
+      <CloudStatusProvider>
+        <HabitProvider>
+          {convexClient ? (
+            <ConvexProvider client={convexClient}>
               <RouterProvider router={router} />
-            </HabitProvider>
-          </CloudStatusProvider>
-        </SubscriptionProvider>
-      </ConvexProvider>
-    </React.StrictMode>
-  );
-} else {
-  // Local mode: skip ConvexProvider entirely
-  ReactDOM.createRoot(root).render(
-    <React.StrictMode>
-      <SubscriptionProvider>
-        <CloudStatusProvider>
-          <HabitProvider>
+            </ConvexProvider>
+          ) : (
             <RouterProvider router={router} />
-          </HabitProvider>
-        </CloudStatusProvider>
-      </SubscriptionProvider>
-    </React.StrictMode>
-  );
-}
+          )}
+        </HabitProvider>
+      </CloudStatusProvider>
+    </SubscriptionProvider>
+  </React.StrictMode>
+);

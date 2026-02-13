@@ -17,7 +17,9 @@ export default async function handler(req: Request): Promise<Response> {
 
   // ── Probe (GET) — lets client discover if cloud TTS is configured ──
   if (req.method === 'GET') {
-    return new Response(JSON.stringify({ ok: !!apiKey }), {
+    // Temporary debug: list env var names containing "OPENAI" (no values)
+    const openaiKeys = Object.keys(process.env).filter((k) => k.includes('OPENAI'))
+    return new Response(JSON.stringify({ ok: !!apiKey, debug_keys: openaiKeys }), {
       status: apiKey ? 200 : 503,
       headers: { 'Content-Type': 'application/json' },
     })

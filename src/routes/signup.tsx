@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
-import { useSession, authClient } from "../lib/auth-client";
+import { useSession, authClient, isCloudAuthConfigured } from "../lib/auth-client";
 
 function SignUpPage() {
   const { data: session } = useSession();
@@ -21,16 +21,21 @@ function SignUpPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isCloudAuthConfigured) return;
     setError("");
     setLoading(true);
     try {
       const result = await authClient.signUp.email({ email, password, name });
       if (result.error) {
-        setError(result.error.message || "Could not create account");
+        const msg = result.error.message || "Could not create account";
+        const code = (result.error as { code?: string }).code;
+        console.error("[signup] Auth error:", { message: msg, code, raw: result.error });
+        setError(msg);
       } else {
         navigate({ to: "/" });
       }
-    } catch {
+    } catch (err) {
+      console.error("[signup] Unexpected error:", err);
       setError("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
@@ -48,6 +53,24 @@ function SignUpPage() {
           <p className="text-gray-500 dark:text-gray-400 mt-1">Sync your assistant across all your devices</p>
         </div>
 
+        {/* Cloud sync not configured banner */}
+        {!isCloudAuthConfigured && (
+          <div className="mb-4 p-4 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-800/40">
+            <p className="text-sm font-medium text-amber-800 dark:text-amber-200 mb-1">
+              Cloud sync isn't enabled on this deployment.
+            </p>
+            <p className="text-xs text-amber-700 dark:text-amber-300 mb-3">
+              You can still use Guidely without an account — data saves locally.
+            </p>
+            <Link
+              to="/"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-amber-600 text-white text-sm font-medium hover:bg-amber-700 transition-colors"
+            >
+              Go to Dashboard →
+            </Link>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800/50 rounded-2xl p-6 border border-gray-200/60 dark:border-gray-700/40 shadow-sm space-y-4">
           {error && (
             <div className="p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-sm">
@@ -62,7 +85,8 @@ function SignUpPage() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
+              disabled={!isCloudAuthConfigured}
+              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               placeholder="Your name"
             />
           </div>
@@ -74,7 +98,8 @@ function SignUpPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
+              disabled={!isCloudAuthConfigured}
+              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               placeholder="you@example.com"
             />
           </div>
@@ -87,14 +112,15 @@ function SignUpPage() {
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={8}
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
+              disabled={!isCloudAuthConfigured}
+              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               placeholder="Min 8 characters"
             />
           </div>
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !isCloudAuthConfigured}
             className="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:scale-[1.02] transition-all duration-200 disabled:opacity-50 disabled:hover:scale-100"
           >
             {loading ? "Creating account..." : "Create Account"}

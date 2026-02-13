@@ -9,6 +9,7 @@ import "./index.css";
 import { SubscriptionProvider } from "@/lib/subscription";
 import { CloudStatusProvider } from "@/lib/cloud-status";
 import { HabitProvider } from "@/lib/context";
+import { CinematicProvider } from "@/components/cinematic/CinematicProvider";
 
 const router = createRouter({ routeTree });
 
@@ -31,14 +32,16 @@ const app = (
 
 ReactDOM.createRoot(root).render(
   <React.StrictMode>
-    <SubscriptionProvider>
-      <CloudStatusProvider>
-        {convexClient ? (
-          <ConvexProvider client={convexClient}>{app}</ConvexProvider>
-        ) : (
-          app
-        )}
-      </CloudStatusProvider>
-    </SubscriptionProvider>
+    <CinematicProvider>
+      <SubscriptionProvider>
+        <CloudStatusProvider>
+          {convexClient ? (
+            <ConvexProvider client={convexClient}>{app}</ConvexProvider>
+          ) : (
+            app
+          )}
+        </CloudStatusProvider>
+      </SubscriptionProvider>
+    </CinematicProvider>
   </React.StrictMode>
 );

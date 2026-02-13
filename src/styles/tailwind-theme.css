@@ -1,6 +1,7 @@
 @plugin "tailwindcss-animate";
 
 @custom-variant dark (&:is(.dark *));
+@custom-variant cinematic (&:is(.cinematic *));
 
 @theme inline {
   --color-background: var(--background);
@@ -112,6 +113,56 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(0.269 0 0);
   --sidebar-ring: oklch(0.439 0 0);
+}
+
+/* ── Cinematic mode: film-grade dark command center ── */
+.cinematic {
+  --background: #050608;
+  --foreground: rgba(255, 255, 255, 0.92);
+  --card: rgba(255, 255, 255, 0.06);
+  --card-foreground: rgba(255, 255, 255, 0.92);
+  --popover: rgba(255, 255, 255, 0.09);
+  --popover-foreground: rgba(255, 255, 255, 0.92);
+  --primary: #35F0C4;
+  --primary-foreground: #050608;
+  --secondary: rgba(255, 255, 255, 0.06);
+  --secondary-foreground: rgba(255, 255, 255, 0.62);
+  --muted: rgba(255, 255, 255, 0.06);
+  --muted-foreground: rgba(255, 255, 255, 0.62);
+  --accent: rgba(53, 240, 196, 0.18);
+  --accent-foreground: #35F0C4;
+  --destructive: #FF5C5C;
+  --destructive-foreground: #FF5C5C;
+  --border: rgba(255, 255, 255, 0.10);
+  --input: rgba(255, 255, 255, 0.10);
+  --ring: rgba(53, 240, 196, 0.30);
+  --chart-1: #35F0C4;
+  --chart-2: rgba(53, 240, 196, 0.5);
+  --chart-3: rgba(255, 176, 32, 0.7);
+  --chart-4: rgba(255, 255, 255, 0.4);
+  --chart-5: rgba(255, 92, 92, 0.6);
+  --sidebar: rgba(255, 255, 255, 0.04);
+  --sidebar-foreground: rgba(255, 255, 255, 0.92);
+  --sidebar-primary: #35F0C4;
+  --sidebar-primary-foreground: #050608;
+  --sidebar-accent: rgba(255, 255, 255, 0.06);
+  --sidebar-accent-foreground: rgba(255, 255, 255, 0.62);
+  --sidebar-border: rgba(255, 255, 255, 0.10);
+  --sidebar-ring: rgba(53, 240, 196, 0.30);
+  --radius: 1rem;
+
+  /* Cinematic-specific tokens */
+  --cin-bg: #050608;
+  --cin-panel: rgba(255, 255, 255, 0.06);
+  --cin-panel-strong: rgba(255, 255, 255, 0.09);
+  --cin-border: rgba(255, 255, 255, 0.10);
+  --cin-text: rgba(255, 255, 255, 0.92);
+  --cin-text-secondary: rgba(255, 255, 255, 0.62);
+  --cin-accent: #35F0C4;
+  --cin-accent-soft: rgba(53, 240, 196, 0.18);
+  --cin-warning: #FFB020;
+  --cin-danger: #FF5C5C;
+  --cin-shadow: 0 12px 40px rgba(0, 0, 0, 0.55);
 }
 
 @layer base {

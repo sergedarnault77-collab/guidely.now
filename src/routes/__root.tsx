@@ -8,6 +8,8 @@ import { useSession } from '@/lib/auth-client'
 import { SyncStatusPill } from '@/components/SyncStatusPill'
 import { FreePlanBanner } from '@/components/FreePlanBanner'
 import { BottomNav } from '@/components/BottomNav'
+import { GrainOverlay } from '@/components/cinematic/GrainOverlay'
+import { PageTransition } from '@/components/cinematic/PageTransition'
 
 
 export const Route = createRootRoute({
@@ -157,9 +159,14 @@ function RootComponent() {
         {/* Free Plan Banner */}
         <FreePlanBanner />
 
+        {/* Global cinematic grain */}
+        <GrainOverlay />
+
         {/* Main Content */}
         <main className="min-h-screen pb-20">
-          <Outlet />
+          <PageTransition>
+            <Outlet />
+          </PageTransition>
         </main>
 
         {/* Bottom Navigation */}

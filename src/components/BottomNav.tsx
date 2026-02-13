@@ -1,6 +1,7 @@
 import { Link, useLocation } from "@tanstack/react-router";
 import { Moon, Sun } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useCinematic } from "./cinematic/CinematicProvider";
 
 const NAV_ITEMS = [
   { to: "/", label: "Dashboard", icon: "📊", exact: true },
@@ -36,6 +37,26 @@ function BottomThemeToggle() {
   );
 }
 
+function BottomCinematicToggle() {
+  const { cinematic, toggleCinematic } = useCinematic();
+  return (
+    <button
+      onClick={toggleCinematic}
+      className={`flex flex-col items-center justify-center gap-0.5 min-w-[44px] py-1 transition-colors ${
+        cinematic
+          ? "text-[#35F0C4]"
+          : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+      }`}
+      aria-label="Toggle cinematic mode"
+    >
+      <span className="text-lg leading-none">🎬</span>
+      <span className={`text-[9px] leading-none ${cinematic ? "font-bold" : "font-medium"}`}>
+        Cinema
+      </span>
+    </button>
+  );
+}
+
 export function BottomNav({ isAuthenticated }: { isAuthenticated: boolean }) {
   const location = useLocation();
   const isAuthPage =
@@ -45,7 +66,7 @@ export function BottomNav({ isAuthenticated }: { isAuthenticated: boolean }) {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-200/60 dark:border-gray-800/40 bg-white/95 dark:bg-gray-950/95 backdrop-blur-xl"
+      className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-200/60 dark:border-gray-800/40 cinematic:border-[rgba(255,255,255,0.10)] bg-white/95 dark:bg-gray-950/95 cinematic:bg-[#050608]/95 backdrop-blur-xl"
       style={{
         paddingBottom: "max(0.25rem, env(safe-area-inset-bottom))",
         paddingLeft: "env(safe-area-inset-left)",
@@ -95,6 +116,9 @@ export function BottomNav({ isAuthenticated }: { isAuthenticated: boolean }) {
 
         {/* Theme toggle */}
         <BottomThemeToggle />
+
+        {/* Cinematic toggle */}
+        <BottomCinematicToggle />
 
         {/* Sign In (only when not authenticated) */}
         {!isAuthenticated && (

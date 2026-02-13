@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useHabits } from '@/lib/context'
 import {
   MONTHS,
@@ -22,6 +22,9 @@ import { interpretTask, formatDuration } from '@/lib/smart-task-ai'
 import { analyzeUserBehavior } from '@/lib/behavior-analytics'
 import { AgendaCard } from '@/components/dashboard/AgendaCard'
 import { PredictionsAccordion } from '@/components/dashboard/PredictionsAccordion'
+import { appendEvent } from '@/lib/attention-events'
+import { useTTS } from '@/lib/useTTS'
+import { generateDailyBriefing } from '@/lib/daily-briefing'
 
 export const Route = createFileRoute('/')({ component: DashboardPage })
 
@@ -255,10 +258,50 @@ function DashboardContent() {
     return plan
   }, [weekTasks, monthData, todayEntry, todayDayIdx])
 
+  // ── Attention event log: app open ──
+  useEffect(() => { appendEvent('app_open') }, [])
+
+  // ── TTS ──
+  const tts = useTTS()
+
+  // ── Daily Briefing ──
+  const remainingHabits = useMemo(() => {
+    if (!monthData.habits.length) return [] as string[]
+    const entry = monthData.days[now.getDate()]
+    return entry
+      ? monthData.habits.filter((h) => !entry.completedHabits.includes(h.id)).map((h) => h.name)
+      : monthData.habits.map((h) => h.name)
+  }, [monthData])
+
+  const briefing = useMemo(
+    () => generateDailyBriefing({
+      greeting,
+      streak,
+      todayProgress,
+      agendaCount,
+      completedToday: todayEntry?.completedHabits.length || 0,
+      totalHabits: monthData.habits.length,
+      remainingHabits,
+      weekTasks,
+      todayDayIdx,
+    }),
+    [greeting, streak, todayProgress, agendaCount, todayEntry, monthData, remainingHabits, weekTasks, todayDayIdx],
+  )
+
   // ── Handlers ──
   const handleAddTask = (text: string) => {
     if (!weeklyData[weekKey]) initWeek(weekKey, weekStart)
     addWeeklyTask(weekKey, text, todayDayIdx)
+  }
+
+  const handleCompleteTask = (taskId: string) => {
+    appendEvent('task_completed', taskId)
+    toggleWeeklyTask(weekKey, taskId)
+  }
+
+  const handleSkipTask = (taskId: string) => {
+    appendEvent('task_skipped', taskId)
+    removeWeeklyTask(weekKey, taskId)
   }
 
   return (
@@ -274,6 +317,73 @@ function DashboardContent() {
             <p className="text-gray-600 dark:text-gray-400 mt-1 flex items-center gap-2">
               <span className="text-orange-500">🔥</span> {streak}-day streak — keep it going!
             </p>
+          )}
+        </div>
+
+        {/* ═══════ 1b. DAILY CINEMATIC BRIEFING ═══════ */}
+        <div className="space-y-3">
+          {/* Tagline */}
+          <p className="text-[11px] font-medium tracking-widest uppercase text-gray-400 dark:text-gray-500 cinematic:text-[var(--cin-text-secondary)]">
+            An AI mirror for how you actually spend your attention.
+          </p>
+
+          {/* Briefing card */}
+          <div className="rounded-2xl bg-white dark:bg-gray-800/50 cinematic:bg-[var(--cin-panel)] border border-gray-200/60 dark:border-gray-700/40 cinematic:border-[var(--cin-border)] p-5">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wide">Daily Briefing</h2>
+              {tts.supported ? (
+                <button
+                  onClick={() => tts.speaking ? tts.stop() : tts.speak(briefing.narrationText)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                    tts.speaking
+                      ? 'bg-red-100 dark:bg-red-900/30 cinematic:bg-[var(--cin-accent-soft)] text-red-600 dark:text-red-400 cinematic:text-[var(--cin-accent)]'
+                      : 'bg-gray-100 dark:bg-gray-700/50 cinematic:bg-[var(--cin-panel-strong)] text-gray-700 dark:text-gray-300 cinematic:text-[var(--cin-text)] hover:bg-gray-200 dark:hover:bg-gray-700'
+                  }`}
+                >
+                  {tts.speaking ? '■ Stop' : '▶︎ Play'}
+                </button>
+              ) : (
+                <span className="text-[10px] text-gray-400">TTS not available</span>
+              )}
+            </div>
+            <p className="text-sm leading-relaxed text-gray-700 dark:text-gray-300 cinematic:text-[var(--cin-text-secondary)] mb-4">
+              {briefing.narrationText}
+            </p>
+            <div className="flex items-center gap-3">
+              {briefing.cards.map((card) => (
+                <div
+                  key={card.label}
+                  className={`flex-1 text-center p-2 rounded-xl border ${
+                    card.tone === 'good'
+                      ? 'bg-emerald-50 dark:bg-emerald-900/20 cinematic:bg-[var(--cin-accent-soft)] border-emerald-200/60 dark:border-emerald-800/40 cinematic:border-[var(--cin-border)]'
+                      : card.tone === 'warning'
+                        ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200/60 dark:border-amber-800/40 cinematic:border-[var(--cin-border)]'
+                        : 'bg-gray-50 dark:bg-gray-700/30 cinematic:bg-[var(--cin-panel-strong)] border-gray-200/40 dark:border-gray-700/30 cinematic:border-[var(--cin-border)]'
+                  }`}
+                >
+                  <p className="text-lg font-bold text-gray-900 dark:text-white">{card.value}</p>
+                  <p className="text-[10px] text-gray-500 dark:text-gray-400">{card.label}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Move-Up card */}
+          {briefing.movedUp && (
+            <div className="rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/15 dark:to-orange-900/15 cinematic:from-[var(--cin-panel)] cinematic:to-[var(--cin-panel-strong)] border border-amber-200/60 dark:border-amber-800/30 cinematic:border-[var(--cin-border)] p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-sm">↑</span>
+                <h3 className="text-xs font-bold uppercase tracking-wide text-amber-800 dark:text-amber-300 cinematic:text-[var(--cin-warning)]">
+                  I moved something up.
+                </h3>
+              </div>
+              <p className="text-sm font-semibold text-gray-900 dark:text-white mb-1">
+                {briefing.movedUp.title}
+              </p>
+              <p className="text-xs text-gray-600 dark:text-gray-400 cinematic:text-[var(--cin-text-secondary)]">
+                {briefing.movedUp.reason}
+              </p>
+            </div>
           )}
         </div>
 
@@ -348,8 +458,8 @@ function DashboardContent() {
                     dayLabel={item.dayLabel}
                     timeSlot={item.timeSlot}
                     completion={item.completion}
-                    onComplete={() => toggleWeeklyTask(weekKey, item.task.id)}
-                    onDismiss={() => removeWeeklyTask(weekKey, item.task.id)}
+                    onComplete={() => handleCompleteTask(item.task.id)}
+                    onDismiss={() => handleSkipTask(item.task.id)}
                   />
                 ))
               )}

@@ -23,7 +23,7 @@ import { analyzeUserBehavior } from '@/lib/behavior-analytics'
 import { AgendaCard } from '@/components/dashboard/AgendaCard'
 import { PredictionsAccordion } from '@/components/dashboard/PredictionsAccordion'
 import { appendEvent } from '@/lib/attention-events'
-import { useTTS } from '@/lib/useTTS'
+import { useTTS, getAvailableVoices } from '@/lib/useTTS'
 import { generateDailyBriefing } from '@/lib/daily-briefing'
 
 export const Route = createFileRoute('/')({ component: DashboardPage })
@@ -66,6 +66,25 @@ function DashboardContent() {
   } = useHabits()
 
   const [agendaOpen, setAgendaOpen] = useState(true)
+  const [copied, setCopied] = useState(false)
+  const [selectedVoice, setSelectedVoice] = useState<string>(() =>
+    typeof window !== 'undefined' ? localStorage.getItem('guidely.briefing.voice.v1') || '' : '',
+  )
+  const [voices, setVoices] = useState(() => getAvailableVoices())
+
+  // Reset "Copied" toast after 2s
+  useEffect(() => {
+    if (!copied) return
+    const t = setTimeout(() => setCopied(false), 2000)
+    return () => clearTimeout(t)
+  }, [copied])
+
+  // Refresh voice list when voices load async
+  useEffect(() => {
+    const handler = () => setVoices(getAvailableVoices())
+    speechSynthesis?.addEventListener?.('voiceschanged', handler)
+    return () => speechSynthesis?.removeEventListener?.('voiceschanged', handler)
+  }, [])
 
   // ── Current month data ──
   const currentMonth = now.getMonth() + 1
@@ -329,27 +348,26 @@ function DashboardContent() {
 
           {/* Briefing card */}
           <div className="rounded-2xl bg-white dark:bg-gray-800/50 cinematic:bg-[var(--cin-panel)] border border-gray-200/60 dark:border-gray-700/40 cinematic:border-[var(--cin-border)] p-5">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wide">Daily Briefing</h2>
-              {tts.supported ? (
-                <button
-                  onClick={() => tts.speaking ? tts.stop() : tts.speak(briefing.narrationText)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                    tts.speaking
-                      ? 'bg-red-100 dark:bg-red-900/30 cinematic:bg-[var(--cin-accent-soft)] text-red-600 dark:text-red-400 cinematic:text-[var(--cin-accent)]'
-                      : 'bg-gray-100 dark:bg-gray-700/50 cinematic:bg-[var(--cin-panel-strong)] text-gray-700 dark:text-gray-300 cinematic:text-[var(--cin-text)] hover:bg-gray-200 dark:hover:bg-gray-700'
-                  }`}
-                >
-                  {tts.speaking ? '■ Stop' : '▶︎ Play'}
-                </button>
-              ) : (
-                <span className="text-[10px] text-gray-400">TTS not available</span>
-              )}
+            {/* Header: headline + vibe tag */}
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="text-sm font-bold text-gray-900 dark:text-white">{briefing.headline}</h2>
+              <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-gray-100 dark:bg-gray-700/50 cinematic:bg-[var(--cin-panel-strong)] text-gray-600 dark:text-gray-300">
+                {briefing.vibeTag}
+              </span>
             </div>
-            <p className="text-sm leading-relaxed text-gray-700 dark:text-gray-300 cinematic:text-[var(--cin-text-secondary)] mb-4">
+
+            {/* One-liner (hero text) */}
+            <p className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white leading-snug mb-3">
+              {briefing.oneLiner}
+            </p>
+
+            {/* Narration */}
+            <p className="text-sm leading-relaxed text-gray-600 dark:text-gray-400 cinematic:text-[var(--cin-text-secondary)] mb-4">
               {briefing.narrationText}
             </p>
-            <div className="flex items-center gap-3">
+
+            {/* Metric chips */}
+            <div className="flex items-center gap-3 mb-4">
               {briefing.cards.map((card) => (
                 <div
                   key={card.label}
@@ -365,6 +383,50 @@ function DashboardContent() {
                   <p className="text-[10px] text-gray-500 dark:text-gray-400">{card.label}</p>
                 </div>
               ))}
+            </div>
+
+            {/* Actions: Play + Copy + Voice selector */}
+            <div className="flex items-center gap-2 flex-wrap">
+              {tts.supported ? (
+                <button
+                  onClick={() => tts.speaking ? tts.stop() : tts.speak(briefing.narrationText, selectedVoice ? { voiceId: selectedVoice } : undefined)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                    tts.speaking
+                      ? 'bg-red-100 dark:bg-red-900/30 cinematic:bg-[var(--cin-accent-soft)] text-red-600 dark:text-red-400 cinematic:text-[var(--cin-accent)]'
+                      : 'bg-gray-100 dark:bg-gray-700/50 cinematic:bg-[var(--cin-panel-strong)] text-gray-700 dark:text-gray-300 cinematic:text-[var(--cin-text)] hover:bg-gray-200 dark:hover:bg-gray-700'
+                  }`}
+                >
+                  {tts.speaking ? '■ Stop' : '▶︎ Play'}
+                </button>
+              ) : (
+                <span className="text-[10px] text-gray-400">TTS not available</span>
+              )}
+              <button
+                onClick={() => {
+                  const text = briefing.movedUp
+                    ? `${briefing.oneLiner}\n\nI moved up: "${briefing.movedUp.title}" — 10minutes.ai`
+                    : `${briefing.oneLiner}\n\n— 10minutes.ai`
+                  navigator.clipboard.writeText(text).then(() => setCopied(true))
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-100 dark:bg-gray-700/50 cinematic:bg-[var(--cin-panel-strong)] text-gray-700 dark:text-gray-300 cinematic:text-[var(--cin-text)] hover:bg-gray-200 dark:hover:bg-gray-700 transition-all"
+              >
+                {copied ? '✓ Copied' : '⧉ Copy'}
+              </button>
+              {tts.supported && voices.length > 0 && (
+                <select
+                  value={selectedVoice}
+                  onChange={(e) => {
+                    setSelectedVoice(e.target.value)
+                    localStorage.setItem('guidely.briefing.voice.v1', e.target.value)
+                  }}
+                  className="px-2 py-1.5 rounded-lg text-[11px] bg-gray-100 dark:bg-gray-700/50 cinematic:bg-[var(--cin-panel-strong)] text-gray-700 dark:text-gray-300 cinematic:text-[var(--cin-text)] border border-gray-200/60 dark:border-gray-700/40 cinematic:border-[var(--cin-border)] outline-none cursor-pointer"
+                >
+                  <option value="">Auto</option>
+                  {voices.slice(0, 8).map((v) => (
+                    <option key={v.id} value={v.id}>{v.name.replace(/ \(.*\)/, '')} ({v.lang})</option>
+                  ))}
+                </select>
+              )}
             </div>
           </div>
 

@@ -25,6 +25,9 @@ import { PredictionsAccordion } from '@/components/dashboard/PredictionsAccordio
 import { appendEvent } from '@/lib/attention-events'
 import { useTTS, getAvailableVoices } from '@/lib/useTTS'
 import { generateDailyBriefing } from '@/lib/daily-briefing'
+import { BRIEFING_PERSONAS, getPersona } from '@/lib/briefing-personas'
+import { loadBriefingSettings, saveBriefingSettings, resolvePersonaForToday } from '@/lib/briefing-settings'
+import { renderBriefingShareCardPNG } from '@/lib/share-card'
 
 export const Route = createFileRoute('/')({ component: DashboardPage })
 
@@ -67,10 +70,15 @@ function DashboardContent() {
 
   const [agendaOpen, setAgendaOpen] = useState(true)
   const [copied, setCopied] = useState(false)
+  const [sharing, setSharing] = useState<'idle' | 'rendering' | 'shared' | 'saved'>('idle')
   const [selectedVoice, setSelectedVoice] = useState<string>(() =>
     typeof window !== 'undefined' ? localStorage.getItem('guidely.briefing.voice.v1') || '' : '',
   )
   const [voices, setVoices] = useState(() => getAvailableVoices())
+  const [briefingSettings, setBriefingSettings] = useState(() => loadBriefingSettings())
+  const todayISO = now.toISOString().slice(0, 10)
+  const activePersonaId = resolvePersonaForToday(briefingSettings, todayISO)
+  const activePersona = getPersona(activePersonaId)
 
   // Reset "Copied" toast after 2s
   useEffect(() => {
@@ -78,6 +86,13 @@ function DashboardContent() {
     const t = setTimeout(() => setCopied(false), 2000)
     return () => clearTimeout(t)
   }, [copied])
+
+  // Reset share toast after 2s
+  useEffect(() => {
+    if (sharing !== 'shared' && sharing !== 'saved') return
+    const t = setTimeout(() => setSharing('idle'), 2000)
+    return () => clearTimeout(t)
+  }, [sharing])
 
   // Refresh voice list when voices load async
   useEffect(() => {
@@ -303,8 +318,10 @@ function DashboardContent() {
       remainingHabits,
       weekTasks,
       todayDayIdx,
+      personaId: activePersonaId,
+      dateISO: todayISO,
     }),
-    [greeting, streak, todayProgress, agendaCount, todayEntry, monthData, remainingHabits, weekTasks, todayDayIdx],
+    [greeting, streak, todayProgress, agendaCount, todayEntry, monthData, remainingHabits, weekTasks, todayDayIdx, activePersonaId, todayISO],
   )
 
   // ── Handlers ──
@@ -356,10 +373,52 @@ function DashboardContent() {
               </span>
             </div>
 
+            {/* Character persona selector */}
+            <div className="flex items-center justify-between mb-3 py-2 px-3 rounded-xl bg-gray-50 dark:bg-gray-700/20 cinematic:bg-[var(--cin-panel-strong)] border border-gray-200/40 dark:border-gray-700/30 cinematic:border-[var(--cin-border)]">
+              <div className="flex items-center gap-2">
+                <span
+                  className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-base border-2 ${activePersona.colorClass}`}
+                  title={activePersona.name}
+                >
+                  {activePersona.emoji}
+                </span>
+                <div>
+                  <p className="text-xs font-semibold text-gray-800 dark:text-gray-200 cinematic:text-[var(--cin-text)] leading-tight">{activePersona.name}</p>
+                  <p className="text-[10px] text-gray-400 dark:text-gray-500 cinematic:text-[var(--cin-text-secondary)]">Today's vibe</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <select
+                  value={briefingSettings.personaMode === 'randomDaily' ? '__random__' : briefingSettings.personaId}
+                  onChange={(e) => {
+                    const val = e.target.value
+                    const next = val === '__random__'
+                      ? { ...briefingSettings, personaMode: 'randomDaily' as const }
+                      : { personaMode: 'fixed' as const, personaId: val as typeof briefingSettings.personaId }
+                    saveBriefingSettings(next)
+                    setBriefingSettings(next)
+                  }}
+                  className="px-2 py-1 rounded-lg text-[11px] bg-white dark:bg-gray-700/50 cinematic:bg-[var(--cin-panel)] text-gray-700 dark:text-gray-300 cinematic:text-[var(--cin-text)] border border-gray-200/60 dark:border-gray-700/40 cinematic:border-[var(--cin-border)] outline-none cursor-pointer"
+                >
+                  <option value="__random__">{'\u{1F3B2}'} Random daily</option>
+                  {BRIEFING_PERSONAS.map((p) => (
+                    <option key={p.id} value={p.id}>{p.emoji} {p.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
             {/* One-liner (hero text) */}
-            <p className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white leading-snug mb-3">
+            <p className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white leading-snug mb-1">
               {briefing.oneLiner}
             </p>
+
+            {/* Signature line */}
+            {briefing.signatureLine && (
+              <p className="text-xs italic text-gray-400 dark:text-gray-500 cinematic:text-[var(--cin-accent)] mb-3">
+                — {briefing.signatureLine}
+              </p>
+            )}
 
             {/* Narration */}
             <p className="text-sm leading-relaxed text-gray-600 dark:text-gray-400 cinematic:text-[var(--cin-text-secondary)] mb-4">
@@ -411,6 +470,42 @@ function DashboardContent() {
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-100 dark:bg-gray-700/50 cinematic:bg-[var(--cin-panel-strong)] text-gray-700 dark:text-gray-300 cinematic:text-[var(--cin-text)] hover:bg-gray-200 dark:hover:bg-gray-700 transition-all"
               >
                 {copied ? '✓ Copied' : '⧉ Copy'}
+              </button>
+              <button
+                disabled={sharing === 'rendering'}
+                onClick={async () => {
+                  setSharing('rendering')
+                  try {
+                    const blob = await renderBriefingShareCardPNG({
+                      brand: '10minutes.ai',
+                      dateISO: todayISO,
+                      personaName: activePersona.name,
+                      personaEmoji: activePersona.emoji,
+                      vibeTag: briefing.vibeTag,
+                      oneLiner: briefing.oneLiner,
+                      signatureLine: briefing.signatureLine,
+                      movedUpTitle: briefing.movedUp?.title,
+                    })
+                    const file = new File([blob], `10minutes-briefing-${todayISO}.png`, { type: 'image/png' })
+                    if (navigator.canShare?.({ files: [file] })) {
+                      await navigator.share({ files: [file], title: '10minutes.ai', text: briefing.oneLiner })
+                      setSharing('shared')
+                    } else {
+                      const url = URL.createObjectURL(blob)
+                      const a = document.createElement('a')
+                      a.href = url
+                      a.download = `10minutes-briefing-${todayISO}.png`
+                      a.click()
+                      URL.revokeObjectURL(url)
+                      setSharing('saved')
+                    }
+                  } catch {
+                    setSharing('idle')
+                  }
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-100 dark:bg-gray-700/50 cinematic:bg-[var(--cin-panel-strong)] text-gray-700 dark:text-gray-300 cinematic:text-[var(--cin-text)] hover:bg-gray-200 dark:hover:bg-gray-700 transition-all disabled:opacity-50"
+              >
+                {sharing === 'rendering' ? '⏳ Rendering…' : sharing === 'shared' ? '✓ Shared' : sharing === 'saved' ? '✓ Saved image' : '↗ Share'}
               </button>
               {tts.supported && voices.length > 0 && (
                 <select

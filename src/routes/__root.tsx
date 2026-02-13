@@ -100,8 +100,8 @@ function RootComponent() {
                 <span className="text-white font-bold text-sm">G</span>
               </div>
               <div className="flex flex-col">
-                <span className="text-sm font-bold text-gray-900 dark:text-white">Guidely</span>
-                <span className="text-xs text-gray-500 dark:text-gray-400 hidden sm:inline">AI Planning</span>
+                <span className="text-sm font-bold text-gray-900 dark:text-white">10minutes.ai</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400 hidden sm:inline">Start in ten minutes.</span>
               </div>
             </Link>
 
@@ -177,7 +177,7 @@ function RootComponent() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 space-y-8">
             <div className="grid md:grid-cols-4 gap-8">
               <div className="space-y-3">
-                <h3 className="font-bold text-gray-900 dark:text-white">Guidely</h3>
+                <h3 className="font-bold text-gray-900 dark:text-white">10minutes.ai</h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   Your AI-powered executive planning assistant ✦
                 </p>
@@ -230,7 +230,7 @@ function RootComponent() {
             </div>
             <div className="border-t border-gray-200/60 dark:border-gray-800/40 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
               <p className="text-xs text-gray-500 dark:text-gray-500">
-                © 2024 Guidely. All rights reserved.
+                © 2026 10minutes.ai. All rights reserved.
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-500">
                 Built with care for focused execution

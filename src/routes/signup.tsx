@@ -60,7 +60,7 @@ function SignUpPage() {
               Cloud sync isn't enabled on this deployment.
             </p>
             <p className="text-xs text-amber-700 dark:text-amber-300 mb-3">
-              You can still use Guidely without an account — data saves locally.
+              You can still use 10minutes.ai without an account — data saves locally.
             </p>
             <Link
               to="/"

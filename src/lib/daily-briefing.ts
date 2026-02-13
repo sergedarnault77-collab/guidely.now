@@ -72,7 +72,7 @@ export function generateDailyBriefing(input: BriefingInput): DailyBriefing {
   }
 
   // ── Narration ──
-  const parts: string[] = [`${greeting}.`, "Here's your Guidely briefing."]
+  const parts: string[] = [`${greeting}.`, "Here's your briefing."]
   if (todayProgress >= 80) parts.push(`You're at ${todayProgress}% today. Strong.`)
   else if (todayProgress >= 40) parts.push(`${todayProgress}% done today. Momentum is building.`)
   else if (todayProgress > 0) parts.push(`${todayProgress}% so far. Room to move.`)

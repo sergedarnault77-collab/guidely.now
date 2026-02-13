@@ -23,7 +23,7 @@ import { analyzeUserBehavior } from '@/lib/behavior-analytics'
 import { AgendaCard } from '@/components/dashboard/AgendaCard'
 import { PredictionsAccordion } from '@/components/dashboard/PredictionsAccordion'
 import { appendEvent } from '@/lib/attention-events'
-import { useTTS, getAvailableVoices } from '@/lib/useTTS'
+import { useTTS, getAvailableVoices, OPENAI_VOICES } from '@/lib/useTTS'
 import { generateDailyBriefing } from '@/lib/daily-briefing'
 import { BRIEFING_PERSONAS, getPersona } from '@/lib/briefing-personas'
 import { loadBriefingSettings, saveBriefingSettings, resolvePersonaForToday } from '@/lib/briefing-settings'
@@ -51,6 +51,17 @@ function DashboardSkeleton() {
   )
 }
 
+/* ── Persona → OpenAI voice mode mapping ───────────────────── */
+
+function personaToVoiceMode(id: string): string {
+  switch (id) {
+    case 'tough_coach': case 'drill': return 'demanding'
+    case 'zen': case 'warm_parent': case 'best_friend': return 'casual'
+    case 'chaos': return 'funny'
+    case 'ceo': default: return 'serious'
+  }
+}
+
 /* ── Main dashboard ────────────────────────────────────────── */
 
 function DashboardContent() {
@@ -73,6 +84,9 @@ function DashboardContent() {
   const [sharing, setSharing] = useState<'idle' | 'rendering' | 'shared' | 'saved'>('idle')
   const [selectedVoice, setSelectedVoice] = useState<string>(() =>
     typeof window !== 'undefined' ? localStorage.getItem('guidely.briefing.voice.v1') || '' : '',
+  )
+  const [selectedOpenAIVoice, setSelectedOpenAIVoice] = useState<string>(() =>
+    typeof window !== 'undefined' ? localStorage.getItem('guidely.tts.voice.openai.v1') || '' : '',
   )
   const [voices, setVoices] = useState(() => getAvailableVoices())
   const [briefingSettings, setBriefingSettings] = useState(() => loadBriefingSettings())
@@ -444,11 +458,21 @@ function DashboardContent() {
               ))}
             </div>
 
-            {/* Actions: Play + Copy + Voice selector */}
+            {/* Actions: Play + Copy + Share + HQ toggle + Voice selector */}
             <div className="flex items-center gap-2 flex-wrap">
               {tts.supported ? (
                 <button
-                  onClick={() => tts.speaking ? tts.stop() : tts.speak(briefing.narrationText, selectedVoice ? { voiceId: selectedVoice } : undefined)}
+                  onClick={() => {
+                    if (tts.speaking) {
+                      tts.stop()
+                    } else {
+                      const isCloud = tts.provider === 'openai' && tts.cloudAvailable
+                      tts.speak(briefing.narrationText, {
+                        voiceId: isCloud ? (selectedOpenAIVoice || undefined) : (selectedVoice || undefined),
+                        mode: personaToVoiceMode(activePersonaId),
+                      })
+                    }
+                  }}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                     tts.speaking
                       ? 'bg-red-100 dark:bg-red-900/30 cinematic:bg-[var(--cin-accent-soft)] text-red-600 dark:text-red-400 cinematic:text-[var(--cin-accent)]'
@@ -507,20 +531,53 @@ function DashboardContent() {
               >
                 {sharing === 'rendering' ? '⏳ Rendering…' : sharing === 'shared' ? '✓ Shared' : sharing === 'saved' ? '✓ Saved image' : '↗ Share'}
               </button>
-              {tts.supported && voices.length > 0 && (
+              {/* HQ voice toggle — only if cloud endpoint is configured */}
+              {tts.cloudAvailable && (
+                <label className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-[11px] font-medium cursor-pointer bg-gray-100 dark:bg-gray-700/50 cinematic:bg-[var(--cin-panel-strong)] text-gray-700 dark:text-gray-300 cinematic:text-[var(--cin-text)] select-none">
+                  <input
+                    type="checkbox"
+                    checked={tts.provider === 'openai'}
+                    onChange={(e) => tts.setProvider(e.target.checked ? 'openai' : 'browser')}
+                    className="w-3.5 h-3.5 rounded accent-indigo-500"
+                  />
+                  HQ voice {'\u{1F399}'}
+                </label>
+              )}
+              {/* Voice dropdown — OpenAI voices when HQ on, browser voices otherwise */}
+              {tts.provider === 'openai' && tts.cloudAvailable ? (
                 <select
-                  value={selectedVoice}
+                  value={selectedOpenAIVoice}
                   onChange={(e) => {
-                    setSelectedVoice(e.target.value)
-                    localStorage.setItem('guidely.briefing.voice.v1', e.target.value)
+                    setSelectedOpenAIVoice(e.target.value)
+                    localStorage.setItem('guidely.tts.voice.openai.v1', e.target.value)
                   }}
                   className="px-2 py-1.5 rounded-lg text-[11px] bg-gray-100 dark:bg-gray-700/50 cinematic:bg-[var(--cin-panel-strong)] text-gray-700 dark:text-gray-300 cinematic:text-[var(--cin-text)] border border-gray-200/60 dark:border-gray-700/40 cinematic:border-[var(--cin-border)] outline-none cursor-pointer"
                 >
                   <option value="">Auto</option>
-                  {voices.slice(0, 8).map((v) => (
-                    <option key={v.id} value={v.id}>{v.name.replace(/ \(.*\)/, '')} ({v.lang})</option>
+                  {OPENAI_VOICES.map((v) => (
+                    <option key={v.id} value={v.id}>{v.name}</option>
                   ))}
                 </select>
+              ) : (
+                tts.supported && voices.length > 0 && (
+                  <select
+                    value={selectedVoice}
+                    onChange={(e) => {
+                      setSelectedVoice(e.target.value)
+                      localStorage.setItem('guidely.briefing.voice.v1', e.target.value)
+                    }}
+                    className="px-2 py-1.5 rounded-lg text-[11px] bg-gray-100 dark:bg-gray-700/50 cinematic:bg-[var(--cin-panel-strong)] text-gray-700 dark:text-gray-300 cinematic:text-[var(--cin-text)] border border-gray-200/60 dark:border-gray-700/40 cinematic:border-[var(--cin-border)] outline-none cursor-pointer"
+                  >
+                    <option value="">Auto</option>
+                    {voices.slice(0, 8).map((v) => (
+                      <option key={v.id} value={v.id}>{v.name.replace(/ \(.*\)/, '')} ({v.lang})</option>
+                    ))}
+                  </select>
+                )
+              )}
+              {/* Cloud error fallback toast */}
+              {tts.cloudError && (
+                <span className="text-[10px] text-amber-500 dark:text-amber-400">HQ voice unavailable, using browser</span>
               )}
             </div>
           </div>

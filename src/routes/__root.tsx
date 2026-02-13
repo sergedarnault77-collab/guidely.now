@@ -7,6 +7,7 @@ import { usePlan } from '@/lib/subscription'
 import { useSession } from '@/lib/auth-client'
 import { SyncStatusPill } from '@/components/SyncStatusPill'
 import { FreePlanBanner } from '@/components/FreePlanBanner'
+import { BottomNav } from '@/components/BottomNav'
 
 
 export const Route = createRootRoute({
@@ -157,9 +158,12 @@ function RootComponent() {
         <FreePlanBanner />
 
         {/* Main Content */}
-        <main className="min-h-screen">
+        <main className="min-h-screen pb-20">
           <Outlet />
         </main>
+
+        {/* Bottom Navigation */}
+        <BottomNav isAuthenticated={isAuthenticated} />
 
         {/* Footer */}
         <footer className="border-t border-gray-200/60 dark:border-gray-800/40 bg-gray-50/50 dark:bg-gray-950/50" style={{ paddingLeft: 'env(safe-area-inset-left)', paddingRight: 'env(safe-area-inset-right)', paddingBottom: 'max(3rem, calc(3rem + env(safe-area-inset-bottom)))' }}>
